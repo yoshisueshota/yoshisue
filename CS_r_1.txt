@@ -1,0 +1,61 @@
+import numpy as np
+import random
+import scipy as sp
+import matplotlib.pyplot as plt
+import pandas as pd
+import math
+from sklearn.model_selection import train_test_split
+from sklearn import linear_model
+
+#x(n×2):original signal
+#A(m×n):観測行列
+#y(m×2):sampling signal
+#IDCT(n×2):スパースな行列
+
+
+#-------データロード-----------
+x = np.loadtxt('/Users/yoshisue/Downloads/C1_00000.dat')
+length = len(x)
+
+#-------間引き行列（ダウンサンプリング）----------------------
+V = [random.randint(0, 1) for j in range(length)]
+
+A= np.diag(V)
+
+#--------IDCT----------------------------
+IDCT = sp.fftpack.idct(x)
+
+#----------サブサンプリング----------------------
+y = np.dot(A, x)        
+
+np.set_printoptions(threshold=np.inf)
+#print(IDCT)
+#print(y)
+
+#--------Lasso------------------------------
+clf=linear_model.Lasso(alpha=0.002, max_iter=500000, tol=0.000001)
+#clf.fit(t_down.reshape(-1,1),df_dct)
+clf.fit(IDCT,y)
+#clf.fit(t_down.reshape(-1,1),c)
+#print(clf.sparse_coef_)
+print(clf.coef_)
+coef = clf.coef_
+#print_model(clf,t_down,c)
+#y_p = clf.predict(IDCT)
+#print(y_p)
+
+#-------------信号の復元-----------------------
+DTC = sp.fftpack.dct(coef)
+y_re =np.dot(A,DCT)
+
+
+#---------------------描画--------------------------
+plt.figure(figsize=(15, 15), dpi=50)
+plt.scatter(np.linspace(0,length,length),y[:,1],color='green', marker='o', label='original')
+#plt.plot(y_p, color='red', label='Lasso')
+plt.plot(y_re, color='red', label='reconstruction')
+plt.legend()
+plt.title("original and Lasso")
+plt.show()
+
+
